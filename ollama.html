@@ -448,7 +448,7 @@
     <!-- Main chat area -->
     <main class="flex-1 overflow-y-auto p-4" id="chat-container">
       <!-- Welcome message -->
-      <div id="welcome-message" class="max-w-3xl mx-auto">
+      <div id="welcome-message" class="max-w-5xl mx-auto">
         <div class="flex space-x-3">
           <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
             <i class="fas fa-robot text-gray-500"></i>
@@ -482,7 +482,7 @@
 
     <!-- Input area -->
     <div class="border-t border-gray-200 bg-white p-4">
-      <div class="max-w-3xl mx-auto space-y-2">
+      <div class="max-w-5xl mx-auto space-y-2">
         <!-- Token metrics for mobile -->
         <div id="mobile-token-metrics"
           class="md:hidden flex justify-center mb-2 text-xs text-gray-500 space-x-2 p-2 border border-gray-200 rounded-md bg-gray-50 mx-auto max-w-fit">
@@ -506,7 +506,7 @@
         </div>
 
         <!-- Model dropdown -->
-        <div class="flex items-center justify-between max-w-3xl mx-auto space-x-4">
+        <div class="flex items-center justify-between max-w-5xl mx-auto space-x-4">
           <div class="relative w-48">
             <label for="model-dropdown" class="block text-xs text-gray-500 mb-1">Model</label>
             <select id="model-dropdown"
@@ -1267,7 +1267,7 @@
         if (conversation.messages.length === 0) {
           const welcomeDiv = document.createElement('div');
           welcomeDiv.id = 'welcome-message';
-          welcomeDiv.className = 'max-w-3xl mx-auto';
+          welcomeDiv.className = 'max-w-5xl mx-auto';
           welcomeDiv.innerHTML = `
                         <div class="flex space-x-3">
                             <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
@@ -1296,7 +1296,7 @@
 
       function addMessageToChat(role, content, saveToHistory = true) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'max-w-3xl mx-auto mb-4';
+        messageDiv.className = 'max-w-7xl mx-auto mb-4';
 
         // Generate a unique ID for this message
         const messageId = 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
@@ -1313,7 +1313,7 @@
                                     <i class="fas fa-trash-alt text-gray-600 hover:text-red-500"></i>
                                 </button>
                             </div>
-                            <div class="bg-blue-500 text-white p-4 rounded-lg shadow-sm max-w-[80%]">
+                            <div class="bg-blue-500 text-white p-4 rounded-lg shadow-sm max-w-[90%]">
                                 <p>${content}</p>
                             </div>
                             <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -1378,7 +1378,7 @@
                             <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
                                 <i class="fas fa-robot text-gray-500"></i>
                             </div>
-                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 max-w-[80%]">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 max-w-[90%]">
                                 <div class="markdown-content">${finalContent}</div>
                             </div>
                             <div class="message-actions flex flex-col space-y-2 opacity-0 transition-opacity duration-200 ml-2">
