@@ -498,7 +498,7 @@
         <form id="chat-form" class="relative">
           <div class="relative">
             <textarea id="message-input" rows="1" placeholder="Message your local AI..."
-              class="w-full p-4 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+              class="w-full p-4 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
               style="min-height: 60px; max-height: 200px;"></textarea>
             <button type="submit" id="send-button"
               class="absolute right-3 bottom-3 w-8 h-8 rounded-md bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
@@ -697,6 +697,10 @@
             welcomeMessage.style.display = 'none';
           }
 
+          // Disable input and send button before generating response
+          messageInput.disabled = true;
+          sendButton.disabled = true;
+
           // Generate AI response
           try {
             abortController = new AbortController();
@@ -712,6 +716,10 @@
               thinkingDiv.remove();
               thinkingDiv = null;
             }
+
+            // Re-enable input after response is complete
+            messageInput.disabled = false;
+            sendButton.disabled = messageInput.value.trim() === '';
           }
         });
 
@@ -1295,7 +1303,7 @@
                                 <span class="thinking-dot"></span>
                                 <span class="thinking-dot"></span>
                                 <span class="thinking-dot"></span>
-                                <span>Thinking...</span>
+                                <span>Generating response...</span>
                             </div>
                         </div>
                     </div>
@@ -1306,8 +1314,15 @@
       }
 
       async function generateAIResponse(prompt) {
+        // Disable input and send button while generating response
+        messageInput.disabled = true;
+        sendButton.disabled = true;
+
         if (!isConnected) {
           addMessageToChat('ai', "I'm not connected to the Ollama server. Please check your connection settings.");
+          // Re-enable input and send button
+          messageInput.disabled = false;
+          sendButton.disabled = messageInput.value.trim() === '';
           return;
         }
 
@@ -1315,6 +1330,9 @@
         if (!selectedModel && (!modelDropdown || !modelDropdown.value)) {
           console.log('No model selected. selectedModel:', selectedModel, 'dropdown value:', modelDropdown ? modelDropdown.value : 'dropdown not found');
           addMessageToChat('ai', "Please select a model from the dropdown first.");
+          // Re-enable input and send button
+          messageInput.disabled = false;
+          sendButton.disabled = messageInput.value.trim() === '';
           return;
         }
 
@@ -1508,6 +1526,10 @@
             thinkingDiv.remove();
             thinkingDiv = null;
           }
+
+          // Re-enable input and send button
+          messageInput.disabled = false;
+          sendButton.disabled = messageInput.value.trim() === '';
         }
       }
 
