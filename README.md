@@ -2,7 +2,7 @@
 
 A lightweight, browser-based chat interface for interacting with your local Ollama models.
 
-![Ollama Chat Screenshot](/docs/screenshot.png)
+![Ollama Chat Screenshot](https://github.com/thakurcoderz/ollama-chat/raw/main/docs/screenshot.png)
 
 ## Features
 
@@ -13,6 +13,7 @@ A lightweight, browser-based chat interface for interacting with your local Olla
 - 🧠 **Model thinking** - see the model's thinking process in collapsible sections
 - 🎨 **Markdown support** - format code blocks, lists, and more
 - 🔍 **Model information** - view details about the selected model
+- 🌡️ **Temperature control** - adjust creativity vs determinism
 - 🌙 **Dark mode** - easy on the eyes
 - 💾 **Local storage** - conversations are saved in your browser
 
@@ -41,15 +42,40 @@ A lightweight, browser-based chat interface for interacting with your local Olla
 
 ## Usage
 
+### Accessing Settings
+
+1. Click the gear icon (⚙️) in the top-right corner to open the settings panel
+2. Here you can configure your connection, model parameters, and view available models
+3. Click "Save & Close" to apply your changes
+
 ### Connecting to Ollama
 
-By default, the app connects to Ollama at `http://localhost:11434`. If your Ollama instance is running on a different address or port, you can change it in the settings.
+By default, the app connects to Ollama at `http://localhost:11434`. To change this:
+
+1. Open the settings panel
+2. Enter your Ollama server URL in the "Server URL" field
+3. Click "Test Connection" to verify connectivity
+4. Click "Save & Close" to apply
 
 ### Selecting a Model
 
 1. Click the model dropdown in the top-right corner
 2. Select any available model from your Ollama installation
-3. If you don't see your models, click the refresh button
+3. If you don't see your models, click the refresh button in the settings panel
+
+### Viewing Available Models
+
+1. Open the settings panel
+2. Scroll down to the "Available Models" section
+3. Here you can see all models installed on your Ollama server
+4. Click "Refresh Models" to update the list
+
+### Adjusting Model Parameters
+
+1. Open the settings panel
+2. Find the "Model Parameters" section
+3. Adjust the temperature slider to control randomness (higher values = more creative, lower values = more deterministic)
+4. Other parameters may be available depending on your Ollama version
 
 ### Managing Conversations
 
