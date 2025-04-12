@@ -9,22 +9,61 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
+    /* Theme variables */
+    :root {
+      /* Light theme (default) */
+      --bg-primary: #f9fafb;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f3f4f6;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --text-tertiary: #6b7280;
+      --border-color: #e5e7eb;
+      --sidebar-bg: #111827;
+      --sidebar-text: #ffffff;
+      --sidebar-hover: #374151;
+      --scrollbar-track: #f1f1f1;
+      --scrollbar-thumb: #888;
+      --scrollbar-thumb-hover: #555;
+      --thinking-bg: #f9fafb;
+      --thinking-border: #fbbf24;
+    }
+
+    /* Dark theme */
+    [data-theme="dark"] {
+      --bg-primary: #111827;
+      --bg-secondary: #1f2937;
+      --bg-tertiary: #374151;
+      --text-primary: #f9fafb;
+      --text-secondary: #e5e7eb;
+      --text-tertiary: #d1d5db;
+      --border-color: #4b5563;
+      --sidebar-bg: #000000;
+      --sidebar-text: #ffffff;
+      --sidebar-hover: #1f2937;
+      --scrollbar-track: #1f2937;
+      --scrollbar-thumb: #4b5563;
+      --scrollbar-thumb-hover: #6b7280;
+      --thinking-bg: #1f2937;
+      --thinking-border: #fbbf24;
+    }
+
     /* Custom scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
     }
 
     ::-webkit-scrollbar-track {
-      background: #f1f1f1;
+      background: var(--scrollbar-track);
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #888;
+      background: var(--scrollbar-thumb);
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #555;
+      background: var(--scrollbar-thumb-hover);
     }
 
     /* Thinking indicator */
@@ -32,14 +71,14 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #6b7280;
+      color: var(--text-tertiary);
     }
 
     .thinking-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background-color: #9ca3af;
+      background-color: var(--text-tertiary);
       animation: thinkingAnimation 1.4s infinite ease-in-out;
     }
 
@@ -66,11 +105,11 @@
 
     /* Collapsible thinking section */
     .thinking-section {
-      background-color: #f9fafb;
-      border-left: 4px solid #fbbf24;
+      background-color: var(--thinking-bg);
+      border-left: 4px solid var(--thinking-border);
       padding: 0.5rem 1rem;
       margin: 0.5rem 0;
-      color: #4b5563;
+      color: var(--text-secondary);
       font-style: italic;
     }
 
@@ -85,13 +124,13 @@
     }
 
     .thinking-toggle:hover {
-      color: #1f2937;
+      color: var(--text-primary);
     }
 
     .thinking-content {
       padding-top: 0.5rem;
       margin-top: 0.5rem;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid var(--border-color);
     }
 
     .hidden {
@@ -132,6 +171,7 @@
     /* Markdown styling */
     .markdown-content {
       line-height: 1.6;
+      color: var(--text-primary);
     }
 
     .markdown-content h1,
@@ -143,17 +183,18 @@
       font-weight: 600;
       margin-top: 1em;
       margin-bottom: 0.5em;
+      color: var(--text-primary);
     }
 
     .markdown-content h1 {
       font-size: 1.8em;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--border-color);
       padding-bottom: 0.3em;
     }
 
     .markdown-content h2 {
       font-size: 1.5em;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--border-color);
       padding-bottom: 0.3em;
     }
 
@@ -176,14 +217,14 @@
 
     .markdown-content code {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      background-color: #f3f4f6;
+      background-color: var(--bg-tertiary);
       padding: 0.2em 0.4em;
       border-radius: 0.25em;
       font-size: 0.9em;
     }
 
     .markdown-content pre {
-      background-color: #f3f4f6;
+      background-color: var(--bg-tertiary);
       padding: 1em;
       border-radius: 0.5em;
       overflow-x: auto;
@@ -197,9 +238,9 @@
     }
 
     .markdown-content blockquote {
-      border-left: 4px solid #e5e7eb;
+      border-left: 4px solid var(--border-color);
       padding-left: 1em;
-      color: #6b7280;
+      color: var(--text-tertiary);
       margin-left: 0;
       margin-right: 0;
       margin-bottom: 1em;
@@ -223,13 +264,13 @@
 
     .markdown-content th,
     .markdown-content td {
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--border-color);
       padding: 0.5em 1em;
       text-align: left;
     }
 
     .markdown-content th {
-      background-color: #f3f4f6;
+      background-color: var(--bg-tertiary);
       font-weight: 600;
     }
 
@@ -246,12 +287,13 @@
       bottom: 0;
       width: 100%;
       max-width: 28rem;
-      background-color: white;
+      background-color: var(--bg-secondary);
       box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.1);
       transform: translateX(100%);
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
       z-index: 50;
       overflow-y: auto;
+      color: var(--text-primary);
     }
 
     .slide-over.open {
@@ -279,6 +321,12 @@
     /* Sidebar animation */
     .sidebar {
       transition: transform 0.3s ease;
+    }
+
+    /* Placeholder text color */
+    ::placeholder {
+      color: var(--text-tertiary);
+      opacity: 0.7;
     }
 
     @media (max-width: 768px) {
@@ -313,7 +361,8 @@
   </style>
 </head>
 
-<body class="bg-gray-50 h-screen flex overflow-hidden">
+<body class="h-screen flex overflow-hidden"
+  style="background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.3s ease, color 0.3s ease;">
   <!-- Sidebar overlay for mobile -->
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
@@ -322,7 +371,8 @@
 
   <!-- Settings panel -->
   <div id="slide-over" class="slide-over">
-    <div class="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+    <div class="p-4 border-b sticky top-0 z-10"
+      style="background-color: var(--bg-secondary); border-color: var(--border-color);">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold">Settings</h2>
         <button id="close-settings" class="text-gray-500 hover:text-gray-700">
@@ -334,10 +384,11 @@
     <div class="p-4 space-y-6">
       <!-- Server settings -->
       <div>
-        <h3 class="font-medium text-gray-900 mb-2">Ollama Server</h3>
+        <h3 class="font-medium mb-2" style="color: var(--text-primary);">Ollama Server</h3>
         <div class="space-y-3">
           <div>
-            <label for="settings-server-url" class="block text-sm font-medium text-gray-700 mb-1">Server URL</label>
+            <label for="settings-server-url" class="block text-sm font-medium mb-1"
+              style="color: var(--text-secondary);">Server URL</label>
             <input id="settings-server-url" type="text" value="http://localhost:11434"
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
           </div>
@@ -360,7 +411,7 @@
 
       <!-- Model settings -->
       <div>
-        <h3 class="font-medium text-gray-900 mb-2">Available Models</h3>
+        <h3 class="font-medium mb-2" style="color: var(--text-primary);">Available Models</h3>
         <div class="space-y-3">
           <div id="models-list" class="space-y-2">
             <div class="text-sm text-gray-500">Loading models...</div>
@@ -370,15 +421,38 @@
 
       <!-- Advanced settings -->
       <div>
-        <h3 class="font-medium text-gray-900 mb-2">Advanced Settings</h3>
+        <h3 class="font-medium mb-2" style="color: var(--text-primary);">Advanced Settings</h3>
         <div class="space-y-3">
           <div>
-            <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+            <label for="temperature" class="block text-sm font-medium mb-1"
+              style="color: var(--text-secondary);">Temperature</label>
             <input id="temperature" type="range" min="0" max="2" step="0.1" value="0.7" class="w-full">
             <div class="flex justify-between text-xs text-gray-500">
               <span>Precise</span>
               <span>Balanced</span>
               <span>Creative</span>
+            </div>
+          </div>
+
+          <!-- Theme settings -->
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">Theme</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button id="theme-system" class="theme-btn p-2 rounded-md border transition-colors text-center"
+                style="border-color: var(--border-color); color: var(--text-primary); background-color: var(--bg-tertiary);">
+                <i class="fas fa-desktop mb-1"></i>
+                <span class="block text-xs">System</span>
+              </button>
+              <button id="theme-light" class="theme-btn p-2 rounded-md border transition-colors text-center"
+                style="border-color: var(--border-color); color: var(--text-primary); background-color: var(--bg-tertiary);">
+                <i class="fas fa-sun mb-1"></i>
+                <span class="block text-xs">Light</span>
+              </button>
+              <button id="theme-dark" class="theme-btn p-2 rounded-md border transition-colors text-center"
+                style="border-color: var(--border-color); color: var(--text-primary); background-color: var(--bg-tertiary);">
+                <i class="fas fa-moon mb-1"></i>
+                <span class="block text-xs">Dark</span>
+              </button>
             </div>
           </div>
         </div>
@@ -387,7 +461,8 @@
   </div>
 
   <!-- Sidebar (conversation list) -->
-  <aside class="sidebar w-64 bg-gray-900 text-white flex flex-col border-r border-gray-700">
+  <aside class="sidebar w-64 flex flex-col border-r"
+    style="background-color: var(--sidebar-bg); color: var(--sidebar-text); border-color: var(--border-color);">
     <!-- New chat button -->
     <div class="p-4 border-b border-gray-700">
       <button id="new-chat-btn"
@@ -411,7 +486,8 @@
   <!-- Main content -->
   <div class="flex-1 flex flex-col h-full overflow-hidden">
     <!-- Header -->
-    <header class="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between">
+    <header class="py-3 px-4 flex items-center justify-between border-b"
+      style="background-color: var(--bg-secondary); border-color: var(--border-color);">
       <div class="flex items-center space-x-4">
         <button id="sidebar-toggle" class="md:hidden text-gray-500 hover:text-gray-700">
           <i class="fas fa-bars"></i>
@@ -429,39 +505,49 @@
           <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
           <span>Disconnected</span>
         </div>
-        <button id="settings-toggle" class="text-gray-500 hover:text-gray-700">
-          <i class="fas fa-cog"></i>
-        </button>
+        <div class="flex items-center space-x-3">
+          <button id="theme-toggle" class="p-1 rounded-full transition-colors"
+            style="color: var(--text-tertiary); background-color: transparent;">
+            <i class="fas fa-moon"></i>
+          </button>
+          <button id="settings-toggle" class="p-1 rounded-full transition-colors"
+            style="color: var(--text-tertiary); background-color: transparent;">
+            <i class="fas fa-cog"></i>
+          </button>
+        </div>
       </div>
     </header>
 
     <!-- Main chat area -->
-    <main class="flex-1 overflow-y-auto p-4" id="chat-container">
+    <main class="flex-1 overflow-y-auto p-4" id="chat-container" style="background-color: var(--bg-primary);">
       <!-- Welcome message -->
       <div id="welcome-message" class="max-w-5xl mx-auto">
         <div class="flex space-x-3">
-          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-            <i class="fas fa-robot text-gray-500"></i>
+          <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+            style="background-color: var(--bg-tertiary);">
+            <i class="fas fa-robot" style="color: var(--text-tertiary);"></i>
           </div>
-          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+          <div class="p-4 rounded-lg shadow-sm border"
+            style="background-color: var(--bg-secondary); border-color: var(--border-color); color: var(--text-primary);">
             <h2 class="font-semibold mb-2">Hello! I'm your local AI assistant</h2>
-            <p class="text-gray-700">I'm running on your machine through Ollama. You can ask me anything and I'll do my
+            <p style="color: var(--text-secondary);">I'm running on your machine through Ollama. You can ask me anything
+              and I'll do my
               best to help!</p>
             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-              <button
-                class="prompt-suggestion bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm p-3 rounded-lg text-left transition-all">
+              <button class="prompt-suggestion text-sm p-3 rounded-lg text-left transition-all"
+                style="background-color: var(--bg-tertiary); color: var(--text-primary);">
                 "Explain how Ollama works"
               </button>
-              <button
-                class="prompt-suggestion bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm p-3 rounded-lg text-left transition-all">
+              <button class="prompt-suggestion text-sm p-3 rounded-lg text-left transition-all"
+                style="background-color: var(--bg-tertiary); color: var(--text-primary);">
                 "What models can I run locally?"
               </button>
-              <button
-                class="prompt-suggestion bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm p-3 rounded-lg text-left transition-all">
+              <button class="prompt-suggestion text-sm p-3 rounded-lg text-left transition-all"
+                style="background-color: var(--bg-tertiary); color: var(--text-primary);">
                 "How do I install new models?"
               </button>
-              <button
-                class="prompt-suggestion bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm p-3 rounded-lg text-left transition-all">
+              <button class="prompt-suggestion text-sm p-3 rounded-lg text-left transition-all"
+                style="background-color: var(--bg-tertiary); color: var(--text-primary);">
                 "What's the difference between Llama and Mistral?"
               </button>
             </div>
@@ -471,14 +557,14 @@
     </main>
 
     <!-- Input area -->
-    <div class="border-t border-gray-200 bg-white p-4">
+    <div class="border-t p-4" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
       <div class="max-w-5xl mx-auto space-y-2">
         <!-- Token metrics for mobile -->
         <div id="mobile-token-metrics"
-          class="md:hidden flex justify-center mb-2 text-xs text-gray-500 space-x-2 p-2 border border-gray-200 rounded-md bg-gray-50 mx-auto max-w-fit">
-          <button id="mobile-refresh-tokens-btn"
-            class="text-gray-500 hover:text-blue-500 p-1 rounded-full hover:bg-gray-200 transition-colors"
-            title="Recalculate tokens">
+          class="md:hidden flex justify-center mb-2 text-xs space-x-2 p-2 border rounded-md mx-auto max-w-fit"
+          style="border-color: var(--border-color); background-color: var(--bg-tertiary); color: var(--text-tertiary);">
+          <button id="mobile-refresh-tokens-btn" class="p-1 rounded-full transition-colors"
+            style="color: var(--text-tertiary);" title="Recalculate tokens">
             <i class="fas fa-sync-alt"></i>
           </button>
           <div class="flex items-center">
@@ -498,15 +584,16 @@
         <!-- Model dropdown -->
         <div class="flex items-center justify-between max-w-5xl mx-auto space-x-4">
           <div class="relative w-48">
-            <label for="model-dropdown" class="block text-xs text-gray-500 mb-1">Model</label>
+            <label for="model-dropdown" class="block text-xs mb-1" style="color: var(--text-tertiary);">Model</label>
             <select id="model-dropdown"
-              class="appearance-none w-full bg-white border border-gray-200 rounded-md pl-3 pr-8 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-gray-300 transition-colors z-10"
+              class="appearance-none w-full rounded-md pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer transition-colors z-10"
+              style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);"
               onchange="console.log('Dropdown changed via inline handler:', this.value)">
               <option value="" disabled>Select a model...</option>
             </select>
             <div class="absolute right-0 bottom-0 flex items-center px-2 h-[30px] pointer-events-none">
-              <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                fill="currentColor">
+              <svg class="h-4 w-4" style="color: var(--text-tertiary);" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd"
                   d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
                   clip-rule="evenodd" />
@@ -514,11 +601,10 @@
             </div>
           </div>
           <div class="flex-1 flex justify-end">
-            <div id="token-metrics-display"
-              class="flex items-center text-sm text-gray-500 space-x-2 p-2 border border-gray-200 rounded-md bg-gray-50">
-              <button id="refresh-tokens-btn"
-                class="text-gray-500 hover:text-blue-500 p-1 rounded-full hover:bg-gray-200 transition-colors"
-                title="Recalculate tokens">
+            <div id="token-metrics-display" class="flex items-center text-sm space-x-2 p-2 border rounded-md"
+              style="border-color: var(--border-color); background-color: var(--bg-tertiary); color: var(--text-tertiary);">
+              <button id="refresh-tokens-btn" class="p-1 rounded-full transition-colors"
+                style="color: var(--text-tertiary);" title="Recalculate tokens">
                 <i class="fas fa-sync-alt"></i>
               </button>
               <div class="flex items-center">
@@ -541,15 +627,16 @@
         <form id="chat-form" class="relative">
           <div class="relative">
             <textarea id="message-input" rows="1" placeholder="Message your local AI..."
-              class="w-full p-4 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-              style="min-height: 60px; max-height: 200px;"></textarea>
+              class="w-full p-4 pr-12 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all disabled:cursor-not-allowed"
+              style="background-color: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-color); min-height: 60px; max-height: 200px;"></textarea>
             <button type="submit" id="send-button"
               class="absolute right-3 bottom-3 w-8 h-8 rounded-md bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
               disabled>
               <i class="fas fa-paper-plane"></i>
             </button>
           </div>
-          <p class="text-xs text-gray-500 mt-2 text-center">Local AI responses may vary in quality. Consider verifying
+          <p class="text-xs mt-2 text-center" style="color: var(--text-tertiary);">Local AI responses may vary in
+            quality. Consider verifying
             important information.</p>
         </form>
       </div>
@@ -610,6 +697,9 @@
       let availableModels = [];
       let thinkingDiv = null;
       let selectedModel = '';
+
+      // Theme state
+      let currentTheme = 'system';
 
       // Initialize the app
       initApp();
@@ -686,6 +776,12 @@
                 }
               }, 100);
             }
+          }
+
+          // Load theme preference if available
+          if (settings.theme) {
+            currentTheme = settings.theme;
+            applyTheme(settings.theme);
           }
 
           // Test connection and fetch fresh models
@@ -892,6 +988,49 @@
         } else {
           console.log('Warning: modelSelect element not found');
         }
+
+        // Theme toggle button
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+          themeToggleBtn.addEventListener('click', function () {
+            toggleTheme();
+          });
+
+          // Update the theme icon based on current theme
+          updateThemeIcon();
+        }
+
+        // Theme buttons in settings panel
+        const themeSystemBtn = document.getElementById('theme-system');
+        const themeLightBtn = document.getElementById('theme-light');
+        const themeDarkBtn = document.getElementById('theme-dark');
+
+        if (themeSystemBtn) {
+          themeSystemBtn.addEventListener('click', function () {
+            applyTheme('system');
+            updateActiveThemeButton();
+            showToast('System theme applied', 'blue');
+          });
+        }
+
+        if (themeLightBtn) {
+          themeLightBtn.addEventListener('click', function () {
+            applyTheme('light');
+            updateActiveThemeButton();
+            showToast('Light theme applied', 'blue');
+          });
+        }
+
+        if (themeDarkBtn) {
+          themeDarkBtn.addEventListener('click', function () {
+            applyTheme('dark');
+            updateActiveThemeButton();
+            showToast('Dark theme applied', 'blue');
+          });
+        }
+
+        // Initialize active theme button
+        updateActiveThemeButton();
 
         // Model dropdown change (if element exists)
         if (modelDropdown) {
@@ -1365,18 +1504,18 @@
           // Set the final HTML
           messageDiv.innerHTML = `
                         <div class="flex space-x-3">
-                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                <i class="fas fa-robot text-gray-500"></i>
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style="background-color: var(--bg-tertiary);">
+                                <i class="fas fa-robot" style="color: var(--text-tertiary);"></i>
                             </div>
-                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 max-w-[90%]">
+                            <div class="p-4 rounded-lg shadow-sm border max-w-[90%]" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
                                 <div class="markdown-content">${finalContent}</div>
                             </div>
                             <div class="message-actions flex flex-col space-y-2 opacity-0 transition-opacity duration-200 ml-2">
-                                <button class="copy-message-btn w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors" title="Copy message">
-                                    <i class="fas fa-copy text-gray-600"></i>
+                                <button class="copy-message-btn w-8 h-8 rounded-full flex items-center justify-center transition-colors" style="background-color: var(--bg-tertiary);" title="Copy message">
+                                    <i class="fas fa-copy" style="color: var(--text-tertiary);"></i>
                                 </button>
-                                <button class="delete-message-btn w-8 h-8 rounded-full bg-gray-200 hover:bg-red-100 flex items-center justify-center transition-colors" title="Delete message">
-                                    <i class="fas fa-trash-alt text-gray-600 hover:text-red-500"></i>
+                                <button class="delete-message-btn w-8 h-8 rounded-full flex items-center justify-center transition-colors" style="background-color: var(--bg-tertiary);" title="Delete message">
+                                    <i class="fas fa-trash-alt" style="color: var(--text-tertiary);"></i>
                                 </button>
                             </div>
                         </div>
@@ -1772,7 +1911,8 @@
           model: selectedModel,
           serverUrl: serverUrlInput.value,
           models: availableModels,
-          lastConversationId: currentConversationId
+          lastConversationId: currentConversationId,
+          theme: document.documentElement.getAttribute('data-theme') || 'system'
         };
         console.log('Saving settings:', settings);
         localStorage.setItem('ollama-settings', JSON.stringify(settings));
@@ -1957,6 +2097,101 @@
       }
 
       // Function to toggle thinking sections (globally accessible)
+      // Theme functions
+      function applyTheme(theme) {
+        // Remove any existing theme
+        document.documentElement.removeAttribute('data-theme');
+
+        if (theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else if (theme === 'light') {
+          // Light theme is the default, so we don't need to set anything
+        } else if (theme === 'system') {
+          // Check system preference
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+
+          // Add listener for system theme changes
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (currentTheme === 'system') {
+              if (e.matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+              } else {
+                document.documentElement.removeAttribute('data-theme');
+              }
+            }
+          });
+        }
+
+        // Update the theme icon
+        updateThemeIcon();
+
+        // Save the theme preference
+        currentTheme = theme;
+        saveSettings();
+      }
+
+      function toggleTheme() {
+        // Cycle through themes: system -> light -> dark -> system
+        if (currentTheme === 'system') {
+          applyTheme('light');
+          showToast('Light theme applied', 'blue');
+        } else if (currentTheme === 'light') {
+          applyTheme('dark');
+          showToast('Dark theme applied', 'blue');
+        } else {
+          applyTheme('system');
+          showToast('System theme applied', 'blue');
+        }
+      }
+
+      function updateThemeIcon() {
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (!themeToggleBtn) return;
+
+        const icon = themeToggleBtn.querySelector('i');
+        if (!icon) return;
+
+        // Remove existing classes
+        icon.classList.remove('fa-sun', 'fa-moon', 'fa-desktop');
+
+        // Add appropriate icon based on current theme
+        if (currentTheme === 'light') {
+          icon.classList.add('fa-sun');
+          themeToggleBtn.setAttribute('title', 'Light theme (click to switch)');
+        } else if (currentTheme === 'dark') {
+          icon.classList.add('fa-moon');
+          themeToggleBtn.setAttribute('title', 'Dark theme (click to switch)');
+        } else {
+          icon.classList.add('fa-desktop');
+          themeToggleBtn.setAttribute('title', 'System theme (click to switch)');
+        }
+      }
+
+      function updateActiveThemeButton() {
+        // Get all theme buttons
+        const themeSystemBtn = document.getElementById('theme-system');
+        const themeLightBtn = document.getElementById('theme-light');
+        const themeDarkBtn = document.getElementById('theme-dark');
+
+        if (!themeSystemBtn || !themeLightBtn || !themeDarkBtn) return;
+
+        // Remove active class from all buttons
+        themeSystemBtn.classList.remove('ring-2', 'ring-blue-500');
+        themeLightBtn.classList.remove('ring-2', 'ring-blue-500');
+        themeDarkBtn.classList.remove('ring-2', 'ring-blue-500');
+
+        // Add active class to the current theme button
+        if (currentTheme === 'system') {
+          themeSystemBtn.classList.add('ring-2', 'ring-blue-500');
+        } else if (currentTheme === 'light') {
+          themeLightBtn.classList.add('ring-2', 'ring-blue-500');
+        } else if (currentTheme === 'dark') {
+          themeDarkBtn.classList.add('ring-2', 'ring-blue-500');
+        }
+      }
+
       function toggleThinkingSection(id) {
         console.log('Toggling thinking section:', id);
         const section = document.getElementById(id);
