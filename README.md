@@ -2,7 +2,7 @@
 
 A lightweight, browser-based chat interface for interacting with your local Ollama models.
 
-![Ollama Chat Screenshot](https://github.com/thakurcoderz/ollama-chat/assets/screenshot.png)
+![Ollama Chat Screenshot](/docs/screenshot.png)
 
 ## Features
 
