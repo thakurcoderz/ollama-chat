@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Ollama Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Thinking indicator */
+    .thinking-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #6b7280;
+    }
+
+    .thinking-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #9ca3af;
+      animation: thinkingAnimation 1.4s infinite ease-in-out;
+    }
+
+    .thinking-dot:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    .thinking-dot:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    @keyframes thinkingAnimation {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(0);
+      }
+
+      40% {
+        transform: scale(1);
+      }
+    }
+
+    /* Collapsible thinking section */
+    .thinking-section {
+      background-color: #f9fafb;
+      border-left: 4px solid #fbbf24;
+      padding: 0.5rem 1rem;
+      margin: 0.5rem 0;
+      color: #4b5563;
+      font-style: italic;
+    }
+
+    .thinking-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 0.25rem 0;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .thinking-toggle:hover {
+      color: #1f2937;
+    }
+
+    .thinking-content {
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Delete conversation button */
+    .delete-conversation-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      font-size: 0.875rem;
+      background-color: rgba(75, 85, 99, 0.3);
+    }
+
+    .conversation-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* Markdown styling */
+    .markdown-content {
+      line-height: 1.6;
+    }
+
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3,
+    .markdown-content h4,
+    .markdown-content h5,
+    .markdown-content h6 {
+      font-weight: 600;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-content h1 {
+      font-size: 1.8em;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.3em;
+    }
+
+    .markdown-content h2 {
+      font-size: 1.5em;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.3em;
+    }
+
+    .markdown-content h3 {
+      font-size: 1.25em;
+    }
+
+    .markdown-content p {
+      margin-bottom: 1em;
+    }
+
+    .markdown-content a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .markdown-content a:hover {
+      text-decoration: underline;
+    }
+
+    .markdown-content code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background-color: #f3f4f6;
+      padding: 0.2em 0.4em;
+      border-radius: 0.25em;
+      font-size: 0.9em;
+    }
+
+    .markdown-content pre {
+      background-color: #f3f4f6;
+      padding: 1em;
+      border-radius: 0.5em;
+      overflow-x: auto;
+      margin-bottom: 1em;
+    }
+
+    .markdown-content pre code {
+      background-color: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    .markdown-content blockquote {
+      border-left: 4px solid #e5e7eb;
+      padding-left: 1em;
+      color: #6b7280;
+      margin-left: 0;
+      margin-right: 0;
+      margin-bottom: 1em;
+    }
+
+    .markdown-content ul,
+    .markdown-content ol {
+      margin-bottom: 1em;
+      padding-left: 2em;
+    }
+
+    .markdown-content li {
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 1em;
+    }
+
+    .markdown-content th,
+    .markdown-content td {
+      border: 1px solid #e5e7eb;
+      padding: 0.5em 1em;
+      text-align: left;
+    }
+
+    .markdown-content th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+    }
+
+    /* Smooth transitions */
+    .transition-all {
+      transition: all 0.3s ease;
+    }
+
+    /* Slide-over panel */
+    .slide-over {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 28rem;
+      background-color: white;
+      box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 50;
+      overflow-y: auto;
+    }
+
+    .slide-over.open {
+      transform: translateX(0);
+    }
+
+    .slide-over-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .slide-over-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Sidebar animation */
+    .sidebar {
+      transition: transform 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        z-index: 50;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 40;
+        display: none;
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+  <!-- Sidebar overlay for mobile -->
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <!-- Settings overlay -->
+  <div id="slide-over-overlay" class="slide-over-overlay"></div>
+
+  <!-- Settings panel -->
+  <div id="slide-over" class="slide-over">
+    <div class="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Settings</h2>
+        <button id="close-settings" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="p-4 space-y-6">
+      <!-- Server settings -->
+      <div>
+        <h3 class="font-medium text-gray-900 mb-2">Ollama Server</h3>
+        <div class="space-y-3">
+          <div>
+            <label for="settings-server-url" class="block text-sm font-medium text-gray-700 mb-1">Server URL</label>
+            <input id="settings-server-url" type="text" value="http://localhost:11434"
+              class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+          </div>
+          <div class="flex space-x-2">
+            <button id="test-connection"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors">
+              Test Connection
+            </button>
+            <button id="refresh-models"
+              class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-md text-sm font-medium transition-colors">
+              <i class="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
+          </div>
+          <div id="connection-status" class="flex items-center text-sm">
+            <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+            <span>Disconnected</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model settings -->
+      <div>
+        <h3 class="font-medium text-gray-900 mb-2">Available Models</h3>
+        <div class="space-y-3">
+          <div id="models-list" class="space-y-2">
+            <div class="text-sm text-gray-500">Loading models...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced settings -->
+      <div>
+        <h3 class="font-medium text-gray-900 mb-2">Advanced Settings</h3>
+        <div class="space-y-3">
+          <div>
+            <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+            <input id="temperature" type="range" min="0" max="2" step="0.1" value="0.7" class="w-full">
+            <div class="flex justify-between text-xs text-gray-500">
+              <span>Precise</span>
+              <span>Balanced</span>
+              <span>Creative</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar (conversation list) -->
+  <aside class="sidebar w-64 bg-gray-900 text-white flex flex-col border-r border-gray-700">
+    <!-- New chat button -->
+    <div class="p-4 border-b border-gray-700">
+      <button id="new-chat-btn"
+        class="flex items-center space-x-2 w-full p-3 rounded-md border border-gray-600 hover:bg-gray-700 transition-all">
+        <i class="fas fa-plus"></i>
+        <span>New chat</span>
+      </button>
+    </div>
+
+    <!-- Conversation list -->
+    <div class="flex-1 overflow-y-auto">
+      <div class="p-2 space-y-1" id="conversation-list">
+        <div class="conversation-item p-3 rounded-md hover:bg-gray-700 cursor-pointer bg-gray-700" data-id="default">
+          <p class="truncate">Welcome conversation</p>
+          <p class="text-xs text-gray-400 truncate">Just now</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- User menu -->
+    <div class="p-4 border-t border-gray-700">
+      <div class="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-700 cursor-pointer">
+        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+          <i class="fas fa-user text-white"></i>
+        </div>
+        <span class="truncate">Local User</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 py-3 px-4 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <button id="sidebar-toggle" class="md:hidden text-gray-500 hover:text-gray-700">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div
+            class="w-8 h-8 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center text-white font-bold">
+            AI
+          </div>
+          <h1 class="text-lg font-semibold">Local Ollama Chat</h1>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div id="header-connection-status" class="flex items-center text-sm">
+          <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+          <span>Disconnected</span>
+        </div>
+        <button id="settings-toggle" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-cog"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main chat area -->
+    <main class="flex-1 overflow-y-auto p-4" id="chat-container">
+      <!-- Welcome message -->
+      <div id="welcome-message" class="max-w-3xl mx-auto">
+        <div class="flex space-x-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+            <i class="fas fa-robot text-gray-500"></i>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+            <h2 class="font-semibold mb-2">Hello! I'm your local AI assistant</h2>
+            <p class="text-gray-700">I'm running on your machine through Ollama. You can ask me anything and I'll do my
+              best to help!</p>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                class="prompt-suggestion bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm p-3 rounded-lg text-left transition-all">
+                "Explain how Ollama works"
+              </button>
+              <button
+                class="prompt-suggestion bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm p-3 rounded-lg text-left transition-all">
+                "What models can I run locally?"
+              </button>
+              <button
+                class="prompt-suggestion bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm p-3 rounded-lg text-left transition-all">
+                "How do I install new models?"
+              </button>
+              <button
+                class="prompt-suggestion bg-gray-50 hover:bg-gray-100 text-gray-800 text-sm p-3 rounded-lg text-left transition-all">
+                "What's the difference between Llama and Mistral?"
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Input area -->
+    <div class="border-t border-gray-200 bg-white p-4">
+      <div class="max-w-3xl mx-auto space-y-2">
+        <!-- Model dropdown -->
+        <div class="flex items-center justify-between max-w-3xl mx-auto space-x-4">
+          <div class="relative w-48">
+            <label for="model-dropdown" class="block text-xs text-gray-500 mb-1">Model</label>
+            <select id="model-dropdown"
+              class="appearance-none w-full bg-white border border-gray-200 rounded-md pl-3 pr-8 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-gray-300 transition-colors z-10"
+              onchange="console.log('Dropdown changed via inline handler:', this.value)">
+              <option value="" disabled>Select a model...</option>
+            </select>
+            <div class="absolute right-0 bottom-0 flex items-center px-2 h-[30px] pointer-events-none">
+              <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clip-rule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1">
+            <!-- Other content -->
+          </div>
+        </div>
+
+        <!-- Message input -->
+        <form id="chat-form" class="relative">
+          <div class="relative">
+            <textarea id="message-input" rows="1" placeholder="Message your local AI..."
+              class="w-full p-4 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+              style="min-height: 60px; max-height: 200px;"></textarea>
+            <button type="submit" id="send-button"
+              class="absolute right-3 bottom-3 w-8 h-8 rounded-md bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
+              disabled>
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2 text-center">Local AI responses may vary in quality. Consider verifying
+            important information.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Configure marked.js
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+        smartypants: true
+      });
+
+      // DOM elements
+      const chatForm = document.getElementById('chat-form');
+      const messageInput = document.getElementById('message-input');
+      const sendButton = document.getElementById('send-button');
+      const chatContainer = document.getElementById('chat-container');
+      const sidebar = document.querySelector('.sidebar');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+      const newChatBtn = document.getElementById('new-chat-btn');
+      const conversationList = document.getElementById('conversation-list');
+      const welcomeMessage = document.getElementById('welcome-message');
+
+      // Settings panel elements
+      const slideOver = document.getElementById('slide-over');
+      const slideOverOverlay = document.getElementById('slide-over-overlay');
+      const closeSettingsBtn = document.getElementById('close-settings');
+      const settingsToggle = document.getElementById('settings-toggle');
+      const serverUrlInput = document.getElementById('settings-server-url');
+      const testConnectionBtn = document.getElementById('test-connection');
+      const refreshModelsBtn = document.getElementById('refresh-models');
+      const connectionStatus = document.getElementById('connection-status');
+      const modelSelect = document.getElementById('settings-model-select');
+      const modelDropdown = document.getElementById('model-dropdown');
+      const headerConnectionStatus = document.getElementById('header-connection-status');
+
+      // App state
+      let currentConversationId = 'default';
+      let conversations = {
+        'default': {
+          id: 'default',
+          title: 'Welcome conversation',
+          lastUpdated: new Date().toISOString(),
+          messages: []
+        }
+      };
+      let isConnected = false;
+      let abortController = null;
+      let availableModels = [];
+      let thinkingDiv = null;
+      let selectedModel = '';
+
+      // Initialize the app
+      initApp();
+
+      function initApp() {
+        // Load conversations from localStorage
+        const savedConversations = localStorage.getItem('ollama-conversations');
+        if (savedConversations) {
+          conversations = JSON.parse(savedConversations);
+          renderConversationList();
+        }
+
+        // Load settings from localStorage
+        const savedSettings = localStorage.getItem('ollama-settings');
+        let lastConversationId = null;
+
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          console.log('Loaded settings:', settings);
+          serverUrlInput.value = settings.serverUrl || 'http://localhost:11434';
+
+          // Get the last opened conversation ID
+          lastConversationId = settings.lastConversationId;
+          console.log('Last conversation ID from settings:', lastConversationId);
+
+          // Load saved models if available
+          if (settings.models && Array.isArray(settings.models) && settings.models.length > 0) {
+            console.log('Loading saved models from localStorage:', settings.models.length);
+            availableModels = settings.models;
+            updateModelSelect(settings.models);
+            updateModelDropdown(settings.models);
+
+            // Set selected model if available
+            if (settings.model) {
+              console.log('Setting saved model:', settings.model);
+              selectedModel = settings.model;
+
+              // Set the dropdown value
+              setTimeout(() => {
+                if (modelDropdown && modelDropdown.options.length > 0) {
+                  for (let i = 0; i < modelDropdown.options.length; i++) {
+                    if (modelDropdown.options[i].value === settings.model) {
+                      modelDropdown.selectedIndex = i;
+                      break;
+                    }
+                  }
+                  updateModelInfo(settings.model);
+                }
+              }, 100);
+            }
+          }
+
+          // Test connection and fetch fresh models
+          testConnection().then(() => {
+            if (isConnected) {
+              fetchAvailableModels();
+            }
+          });
+        } else {
+          // Show default state
+          updateModelSelect([]);
+          updateModelDropdown([]);
+
+          // Test connection for first-time users
+          testConnection().then(() => {
+            if (isConnected) {
+              fetchAvailableModels();
+            }
+          });
+        }
+
+        // Load the appropriate conversation
+        if (lastConversationId && conversations[lastConversationId]) {
+          // Load the last opened conversation if it exists
+          console.log('Loading last opened conversation:', lastConversationId);
+          loadConversation(lastConversationId);
+        } else if (Object.keys(conversations).length > 0) {
+          // Otherwise load the first available conversation
+          const firstConvId = Object.keys(conversations)[0];
+          console.log('Loading first available conversation:', firstConvId);
+          loadConversation(firstConvId);
+        } else {
+          // If no conversations exist, create a new one
+          console.log('No conversations found, creating a new one');
+          createNewConversation();
+        }
+
+        // Event listeners
+        setupEventListeners();
+      }
+
+      function setupEventListeners() {
+        // Toggle sidebar on mobile
+        sidebarToggle.addEventListener('click', function () {
+          sidebar.classList.toggle('open');
+          sidebarOverlay.classList.toggle('open');
+        });
+
+        // Close sidebar when clicking overlay
+        sidebarOverlay.addEventListener('click', function () {
+          sidebar.classList.remove('open');
+          sidebarOverlay.classList.remove('open');
+        });
+
+        // New chat button
+        newChatBtn.addEventListener('click', createNewConversation);
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function () {
+          this.style.height = 'auto';
+          this.style.height = (this.scrollHeight) + 'px';
+
+          // Enable/disable send button
+          sendButton.disabled = this.value.trim() === '';
+        });
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const message = messageInput.value.trim();
+          if (message === '') return;
+
+          // Add user message to chat
+          addMessageToChat('user', message);
+
+          // Clear input
+          messageInput.value = '';
+          messageInput.style.height = 'auto';
+          sendButton.disabled = true;
+
+          // Hide welcome message if it's visible
+          if (welcomeMessage) {
+            welcomeMessage.style.display = 'none';
+          }
+
+          // Generate AI response
+          try {
+            abortController = new AbortController();
+            await generateAIResponse(message);
+          } catch (error) {
+            if (error.name !== 'AbortError') {
+              console.error('Error generating response:', error);
+              addMessageToChat('ai', `Sorry, I encountered an error: ${error.message}`);
+            }
+          } finally {
+            abortController = null;
+            if (thinkingDiv) {
+              thinkingDiv.remove();
+              thinkingDiv = null;
+            }
+          }
+        });
+
+        // Send message on Enter key (without Shift)
+        messageInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit'));
+          }
+        });
+
+        // Add click handlers for example prompts
+        document.querySelectorAll('.prompt-suggestion').forEach(button => {
+          button.addEventListener('click', function () {
+            messageInput.value = this.textContent.trim();
+            messageInput.style.height = 'auto';
+            messageInput.style.height = (messageInput.scrollHeight) + 'px';
+            sendButton.disabled = false;
+            messageInput.focus();
+          });
+        });
+
+        // Server URL change
+        serverUrlInput.addEventListener('change', function () {
+          saveSettings();
+          isConnected = false;
+          updateConnectionStatus();
+          updateModelSelect([]); // Clear models until we fetch new ones
+          updateModelDropdown([]);
+        });
+
+        // Test connection button
+        testConnectionBtn.addEventListener('click', async function () {
+          await testConnection();
+          if (isConnected) {
+            await fetchAvailableModels();
+          }
+        });
+
+        // Refresh models button
+        refreshModelsBtn.addEventListener('click', async function () {
+          if (!isConnected) {
+            await testConnection();
+          }
+          if (isConnected) {
+            await fetchAvailableModels();
+          }
+        });
+
+        // Settings toggle
+        settingsToggle.addEventListener('click', function () {
+          slideOver.classList.add('open');
+          slideOverOverlay.classList.add('open');
+        });
+
+        // Quick settings button functionality removed
+
+        // Close settings panel
+        closeSettingsBtn.addEventListener('click', function () {
+          slideOver.classList.remove('open');
+          slideOverOverlay.classList.remove('open');
+        });
+
+        // Close settings when clicking overlay
+        slideOverOverlay.addEventListener('click', function () {
+          slideOver.classList.remove('open');
+          slideOverOverlay.classList.remove('open');
+        });
+
+        // Model select change (if element exists)
+        if (modelSelect) {
+          modelSelect.addEventListener('change', function () {
+            selectedModel = this.value;
+            if (modelDropdown) {
+              modelDropdown.value = this.value;
+            }
+            updateModelInfo(this.value);
+            saveSettings();
+          });
+        } else {
+          console.log('Warning: modelSelect element not found');
+        }
+
+        // Model dropdown change (if element exists)
+        if (modelDropdown) {
+          console.log('Adding event listener to model dropdown');
+
+          // Add click event to make sure the dropdown is clickable
+          modelDropdown.addEventListener('click', function () {
+            console.log('Model dropdown clicked');
+          });
+
+          modelDropdown.addEventListener('change', function () {
+            console.log('Model dropdown changed to:', this.value);
+            selectedModel = this.value;
+            if (modelSelect) {
+              modelSelect.value = this.value;
+            }
+            updateModelInfo(this.value);
+            saveSettings();
+          });
+
+          // Force enable the dropdown
+          modelDropdown.disabled = false;
+        } else {
+          console.log('Warning: modelDropdown element not found');
+        }
+      }
+
+      async function fetchAvailableModels() {
+        const serverUrl = serverUrlInput.value;
+        const modelsList = document.getElementById('models-list');
+
+        try {
+          // Show loading state
+          if (modelsList) {
+            modelsList.innerHTML = '<div class="text-sm text-gray-500">Loading models...</div>';
+          }
+
+          if (modelDropdown) {
+            modelDropdown.innerHTML = '<option value="" disabled selected>Loading models...</option>';
+            modelDropdown.disabled = true;
+          }
+
+          const response = await fetch(`${serverUrl}/api/tags`);
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch models: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Fetched models:', data.models); // Debug log
+
+          if (!data.models || !Array.isArray(data.models)) {
+            throw new Error('Invalid response format');
+          }
+
+          availableModels = data.models;
+
+          // Update displays
+          updateModelSelect(availableModels);
+          updateModelDropdown(availableModels);
+
+          // Save models to localStorage
+          saveSettings();
+
+          showToast(`Loaded ${availableModels.length} models`, 'green');
+
+        } catch (error) {
+          console.error('Error fetching models:', error);
+
+          if (modelsList) {
+            modelsList.innerHTML = '<div class="text-sm text-gray-500">Failed to load models</div>';
+          }
+
+          if (modelDropdown) {
+            modelDropdown.innerHTML = '<option value="" disabled selected>Failed to load models</option>';
+            modelDropdown.disabled = false;
+          }
+
+          showToast('Failed to load models', 'red');
+        }
+      }
+
+      function updateModelSelect(models) {
+        const modelsList = document.getElementById('models-list');
+        if (!modelsList) {
+          console.log('Warning: models-list element not found');
+          return;
+        }
+
+        modelsList.innerHTML = '';
+
+        if (!models || models.length === 0) {
+          modelsList.innerHTML = '<div class="text-sm text-gray-500">No models available</div>';
+          return;
+        }
+
+        // Sort models alphabetically
+        const sortedModels = [...models].sort((a, b) => a.name.localeCompare(b.name));
+
+        // Create list of models
+        sortedModels.forEach(model => {
+          const modelDiv = document.createElement('div');
+          modelDiv.className = 'bg-white rounded-lg p-3 border border-gray-200 hover:border-blue-300 transition-colors';
+
+          // Calculate size in GB if available
+          const sizeInGB = model.size
+            ? (model.size / 1024 / 1024 / 1024).toFixed(2)
+            : null;
+
+          const details = model.details || {};
+
+          modelDiv.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-900">${model.name}</div>
+                                <div class="text-sm text-gray-500 mt-1">
+                                    ${sizeInGB ? `Size: ${sizeInGB} GB` : ''}
+                                    ${details.parameter_size ? `<br>Parameters: ${details.parameter_size}` : ''}
+                                    ${details.family ? `<br>Family: ${details.family}` : ''}
+                                    ${model.modified_at ? `<br>Modified: ${new Date(model.modified_at).toLocaleString()}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+          modelsList.appendChild(modelDiv);
+        });
+      }
+
+      function updateModelDropdown(models) {
+        if (!modelDropdown) {
+          console.log('Warning: model-dropdown element not found');
+          return;
+        }
+
+        console.log('Updating model dropdown with', models ? models.length : 0, 'models');
+
+        // Make sure the dropdown is enabled
+        modelDropdown.disabled = false;
+
+        // Clear existing options
+        modelDropdown.innerHTML = '';
+
+        // Add default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select a model';
+        defaultOption.disabled = true;
+        defaultOption.selected = !selectedModel; // Only select if no model is selected
+        modelDropdown.appendChild(defaultOption);
+
+        // Sort models alphabetically
+        const sortedModels = [...models].sort((a, b) => a.name.localeCompare(b.name));
+
+        // Add model options
+        console.log('Adding model options to dropdown');
+        sortedModels.forEach(model => {
+          const option = document.createElement('option');
+          option.value = model.name;
+          option.textContent = model.name;
+
+          if (model.size) {
+            const sizeInGB = (model.size / 1024 / 1024 / 1024).toFixed(2);
+            option.textContent += ` (${sizeInGB}GB)`;
+          }
+
+          // Set as selected if it matches the selectedModel
+          if (model.name === selectedModel) {
+            option.selected = true;
+            console.log('Setting selected model in dropdown:', model.name);
+          }
+
+          modelDropdown.appendChild(option);
+          console.log('Added option:', model.name);
+        });
+
+        // Log the final state of the dropdown
+        console.log('Dropdown now has', modelDropdown.options.length, 'options');
+        console.log('Dropdown selected index:', modelDropdown.selectedIndex);
+        console.log('Dropdown disabled:', modelDropdown.disabled);
+
+        // Save settings after updating dropdown
+        if (selectedModel) {
+          saveSettings();
+        }
+      }
+
+      function updateModelInfo(modelName) {
+        // These elements might not exist in the current HTML
+        const modelInfo = document.getElementById('model-info');
+        const modelSize = document.getElementById('model-size');
+        const modelModified = document.getElementById('model-modified');
+
+        // If elements don't exist, just return
+        if (!modelInfo || !modelSize || !modelModified) {
+          console.log('Model info elements not found in DOM');
+          return;
+        }
+
+        if (!modelName) {
+          modelInfo.classList.add('hidden');
+          return;
+        }
+
+        const model = availableModels.find(m => m.name === modelName);
+        if (model) {
+          if (model.size) {
+            const sizeInGB = (model.size / 1024 / 1024 / 1024).toFixed(2);
+            modelSize.textContent = `${sizeInGB} GB`;
+          } else {
+            modelSize.textContent = 'Unknown';
+          }
+
+          if (model.modified_at) {
+            const modifiedDate = new Date(model.modified_at);
+            modelModified.textContent = modifiedDate.toLocaleString();
+          } else {
+            modelModified.textContent = 'Unknown';
+          }
+
+          modelInfo.classList.remove('hidden');
+        } else {
+          modelInfo.classList.add('hidden');
+        }
+      }
+
+      function createNewConversation() {
+        const newId = 'conv-' + Date.now();
+        const newConversation = {
+          id: newId,
+          title: 'New conversation',
+          lastUpdated: new Date().toISOString(),
+          messages: []
+        };
+
+        conversations[newId] = newConversation;
+        saveConversations();
+        renderConversationList();
+        loadConversation(newId);
+
+        // Close sidebar on mobile
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+      }
+
+      function renderConversationList() {
+        conversationList.innerHTML = '';
+
+        // Sort conversations by last updated (newest first)
+        const sortedConversations = Object.values(conversations).sort((a, b) => {
+          return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+        });
+
+        sortedConversations.forEach(conv => {
+          const convElement = document.createElement('div');
+          convElement.className = `conversation-item p-3 rounded-md hover:bg-gray-700 cursor-pointer ${conv.id === currentConversationId ? 'bg-gray-700' : ''}`;
+          convElement.dataset.id = conv.id;
+
+          const lastUpdated = new Date(conv.lastUpdated);
+          const timeString = formatTimeAgo(lastUpdated);
+
+          convElement.innerHTML = `
+                        <div class="flex justify-between items-center w-full">
+                          <div class="flex-grow mr-2 overflow-hidden">
+                            <p class="truncate max-w-full">${conv.title}</p>
+                            <p class="text-xs text-gray-400 truncate max-w-full">${timeString}</p>
+                          </div>
+                          <button class="delete-conversation-btn text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-600 transition-colors flex-shrink-0 opacity-70">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </div>
+                    `;
+
+          // Add click event for the conversation item
+          convElement.addEventListener('click', (e) => {
+            // Don't trigger if clicking the delete button
+            if (e.target.closest('.delete-conversation-btn')) {
+              return;
+            }
+
+            loadConversation(conv.id);
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+          });
+
+          // Add delete button event listener
+          const deleteBtn = convElement.querySelector('.delete-conversation-btn');
+          deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering the conversation click
+            deleteConversation(conv.id);
+          });
+
+          conversationList.appendChild(convElement);
+        });
+      }
+
+      function formatTimeAgo(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+        return date.toLocaleDateString();
+      }
+
+      function deleteConversation(conversationId) {
+        // Show confirmation dialog
+        if (!confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
+          return;
+        }
+
+        // Delete the conversation
+        delete conversations[conversationId];
+
+        // Save updated conversations to localStorage
+        saveConversations();
+
+        // If we deleted the current conversation, load another one
+        if (conversationId === currentConversationId) {
+          // Get the first available conversation, or create a new one if none exist
+          const remainingConversations = Object.keys(conversations);
+
+          if (remainingConversations.length > 0) {
+            loadConversation(remainingConversations[0]);
+          } else {
+            // No conversations left, create a new one
+            createNewConversation();
+          }
+        }
+
+        // Update the conversation list
+        renderConversationList();
+
+        // Show success message
+        showToast('Conversation deleted successfully', 'green');
+      }
+
+      function loadConversation(conversationId) {
+        if (!conversations[conversationId]) return;
+
+        currentConversationId = conversationId;
+        const conversation = conversations[conversationId];
+
+        // Save the current conversation ID to settings
+        saveSettings();
+
+        // Update UI to show selected conversation
+        document.querySelectorAll('.conversation-item').forEach(item => {
+          item.classList.toggle('bg-gray-700', item.dataset.id === conversationId);
+        });
+
+        // Clear chat container
+        chatContainer.innerHTML = '';
+
+        // Show welcome message if it's a new conversation with no messages
+        if (conversation.messages.length === 0) {
+          const welcomeDiv = document.createElement('div');
+          welcomeDiv.id = 'welcome-message';
+          welcomeDiv.className = 'max-w-3xl mx-auto';
+          welcomeDiv.innerHTML = `
+                        <div class="flex space-x-3">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                <i class="fas fa-robot text-gray-500"></i>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                                <h2 class="font-semibold mb-2">New conversation started</h2>
+                                <p class="text-gray-700">You're now chatting with ${selectedModel || 'your selected model'}. Ask me anything!</p>
+                            </div>
+                        </div>
+                    `;
+          chatContainer.appendChild(welcomeDiv);
+        } else {
+          // Render all messages in the conversation
+          conversation.messages.forEach(msg => {
+            addMessageToChat(msg.role, msg.content, false);
+          });
+        }
+
+        // Scroll to bottom
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      function addMessageToChat(role, content, saveToHistory = true) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'max-w-3xl mx-auto mb-4';
+
+        if (role === 'user') {
+          messageDiv.innerHTML = `
+                        <div class="flex space-x-3 justify-end">
+                            <div class="bg-blue-500 text-white p-4 rounded-lg shadow-sm max-w-[80%]">
+                                <p>${content}</p>
+                            </div>
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i class="fas fa-user text-blue-500"></i>
+                            </div>
+                        </div>
+                    `;
+        } else {
+          // Process thinking sections and parse markdown content
+          let rawContent = content;
+          let finalContent = '';
+
+          // Extract thinking sections and replace them with unique markers
+          const thinkingRegex = /<think>([\s\S]*?)<\/think>/g;
+          let match;
+          let lastIndex = 0;
+          let thinkingCounter = 0;
+
+          // Process each thinking section
+          while ((match = thinkingRegex.exec(rawContent)) !== null) {
+            // Add the text before this thinking section (as markdown)
+            const textBeforeThinking = rawContent.substring(lastIndex, match.index);
+            if (textBeforeThinking) {
+              finalContent += marked.parse(textBeforeThinking);
+            }
+
+            // Create the thinking section HTML
+            const thinkingContent = match[1];
+            const thinkingSectionId = 'thinking-' + Date.now() + '-' + thinkingCounter++;
+
+            // Add the thinking section HTML directly
+            finalContent += `
+              <div id="${thinkingSectionId}" class="thinking-section">
+                <div class="thinking-toggle" onclick="toggleThinkingSection('${thinkingSectionId}')">
+                  <span><i class="fas fa-lightbulb mr-1"></i> Model's Thinking</span>
+                  <span class="expand-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="thinking-content hidden">
+                  ${thinkingContent}
+                </div>
+              </div>
+            `;
+
+            // Update the last index
+            lastIndex = match.index + match[0].length;
+          }
+
+          // Add any remaining content after the last thinking section
+          if (lastIndex < rawContent.length) {
+            const remainingText = rawContent.substring(lastIndex);
+            finalContent += marked.parse(remainingText);
+          }
+
+          // If no thinking sections were found, just parse the whole content as markdown
+          if (thinkingCounter === 0) {
+            finalContent = marked.parse(rawContent);
+          }
+
+          // Set the final HTML
+          messageDiv.innerHTML = `
+                        <div class="flex space-x-3">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                <i class="fas fa-robot text-gray-500"></i>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 max-w-[80%]">
+                                <div class="markdown-content">${finalContent}</div>
+                            </div>
+                        </div>
+                    `;
+        }
+
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // Save to conversation history
+        if (saveToHistory && conversations[currentConversationId]) {
+          conversations[currentConversationId].messages.push({
+            role,
+            content
+          });
+
+          // Update conversation title if it's the first message
+          if (role === 'user' && conversations[currentConversationId].messages.length === 1) {
+            conversations[currentConversationId].title = content.length > 30
+              ? content.substring(0, 30) + '...'
+              : content;
+          }
+
+          conversations[currentConversationId].lastUpdated = new Date().toISOString();
+          saveConversations();
+          renderConversationList();
+        }
+      }
+
+      function showThinkingIndicator() {
+        if (thinkingDiv) return;
+
+        thinkingDiv = document.createElement('div');
+        thinkingDiv.className = 'max-w-3xl mx-auto mb-4';
+        thinkingDiv.innerHTML = `
+                    <div class="flex space-x-3">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-robot text-gray-500"></i>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 max-w-[80%]">
+                            <div class="thinking-indicator">
+                                <span class="thinking-dot"></span>
+                                <span class="thinking-dot"></span>
+                                <span class="thinking-dot"></span>
+                                <span>Thinking...</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+        chatContainer.appendChild(thinkingDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      async function generateAIResponse(prompt) {
+        if (!isConnected) {
+          addMessageToChat('ai', "I'm not connected to the Ollama server. Please check your connection settings.");
+          return;
+        }
+
+        // Check if a model is selected either in the selectedModel variable or in the dropdown
+        if (!selectedModel && (!modelDropdown || !modelDropdown.value)) {
+          console.log('No model selected. selectedModel:', selectedModel, 'dropdown value:', modelDropdown ? modelDropdown.value : 'dropdown not found');
+          addMessageToChat('ai', "Please select a model from the dropdown first.");
+          return;
+        }
+
+        // If selectedModel is not set but dropdown has a value, use that
+        if (!selectedModel && modelDropdown && modelDropdown.value) {
+          selectedModel = modelDropdown.value;
+          console.log('Using model from dropdown:', selectedModel);
+          saveSettings();
+        }
+
+        const serverUrl = serverUrlInput.value;
+
+        // Show thinking indicator
+        showThinkingIndicator();
+
+        try {
+          const response = await fetch(`${serverUrl}/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: selectedModel,
+              messages: [
+                ...conversations[currentConversationId].messages.map(msg => ({
+                  role: msg.role,
+                  content: msg.content
+                })),
+                { role: 'user', content: prompt }
+              ],
+              stream: true
+            }),
+            signal: abortController.signal
+          });
+
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let aiResponse = '';
+          let responseDiv = null;
+          let isThinkingSection = false;
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+            for (const line of lines) {
+              if (line.startsWith('data:') && !line.includes('[DONE]')) {
+                try {
+                  const data = JSON.parse(line.substring(5));
+                  if (data.choices && data.choices[0].delta.content) {
+                    const content = data.choices[0].delta.content;
+
+                    // Check for thinking sections - store the raw tags
+                    if (content.includes('<think>')) {
+                      isThinkingSection = true;
+                      aiResponse += content; // Store the raw <think> tag
+                      continue;
+                    }
+
+                    if (content.includes('</think>')) {
+                      isThinkingSection = false;
+                      aiResponse += content; // Store the raw </think> tag
+                      continue;
+                    }
+
+                    // Process all content, including thinking sections
+                    if (isThinkingSection) {
+                      aiResponse += content;
+                    } else {
+                      aiResponse += content;
+                    }
+
+                    // Create or update the response div
+                    if (!responseDiv) {
+                      // Remove thinking indicator if we have actual content
+                      if (thinkingDiv) {
+                        thinkingDiv.remove();
+                        thinkingDiv = null;
+                      }
+
+                      responseDiv = document.createElement('div');
+                      responseDiv.className = 'max-w-3xl mx-auto mb-4';
+
+                      // Initial HTML structure
+                      responseDiv.innerHTML = `
+                        <div class="flex space-x-3">
+                          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-robot text-gray-500"></i>
+                          </div>
+                          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 max-w-[80%]">
+                            <div class="markdown-content"></div>
+                          </div>
+                        </div>
+                      `;
+
+                      chatContainer.appendChild(responseDiv);
+                    }
+
+                    // Process the content with our custom thinking section handler
+                    const contentDiv = responseDiv.querySelector('.markdown-content');
+
+                    // Use the same processing logic we use for loaded conversations
+                    let rawContent = aiResponse;
+                    let finalContent = '';
+
+                    // Extract thinking sections and replace them with unique markers
+                    const thinkingRegex = /<think>([\s\S]*?)<\/think>/g;
+                    let match;
+                    let lastIndex = 0;
+                    let thinkingCounter = 0;
+
+                    // Reset the regex lastIndex
+                    thinkingRegex.lastIndex = 0;
+
+                    // Process each thinking section
+                    while ((match = thinkingRegex.exec(rawContent)) !== null) {
+                      // Add the text before this thinking section (as markdown)
+                      const textBeforeThinking = rawContent.substring(lastIndex, match.index);
+                      if (textBeforeThinking) {
+                        finalContent += marked.parse(textBeforeThinking);
+                      }
+
+                      // Create the thinking section HTML
+                      const thinkingContent = match[1];
+                      const thinkingSectionId = 'thinking-' + Date.now() + '-' + thinkingCounter++;
+
+                      // Add the thinking section HTML directly
+                      finalContent += `
+                        <div id="${thinkingSectionId}" class="thinking-section">
+                          <div class="thinking-toggle" onclick="toggleThinkingSection('${thinkingSectionId}')">
+                            <span><i class="fas fa-lightbulb mr-1"></i> Model's Thinking</span>
+                            <span class="expand-icon"><i class="fas fa-chevron-down"></i></span>
+                          </div>
+                          <div class="thinking-content hidden">
+                            ${thinkingContent}
+                          </div>
+                        </div>
+                      `;
+
+                      // Update the last index
+                      lastIndex = match.index + match[0].length;
+                    }
+
+                    // Add any remaining content after the last thinking section
+                    if (lastIndex < rawContent.length) {
+                      const remainingText = rawContent.substring(lastIndex);
+                      finalContent += marked.parse(remainingText);
+                    }
+
+                    // If no thinking sections were found, just parse the whole content as markdown
+                    if (thinkingCounter === 0) {
+                      finalContent = marked.parse(rawContent);
+                    }
+
+                    // Update the content
+                    contentDiv.innerHTML = finalContent;
+
+                    // Scroll to bottom
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                  }
+                } catch (e) {
+                  console.error('Error parsing stream data:', e);
+                }
+              }
+            }
+          }
+
+          // Save the complete response to conversation history
+          if (aiResponse && conversations[currentConversationId]) {
+            conversations[currentConversationId].messages.push({
+              role: 'assistant',
+              content: aiResponse
+            });
+            conversations[currentConversationId].lastUpdated = new Date().toISOString();
+            saveConversations();
+          }
+
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            throw error;
+          }
+        } finally {
+          if (thinkingDiv) {
+            thinkingDiv.remove();
+            thinkingDiv = null;
+          }
+        }
+      }
+
+      async function testConnection() {
+        const serverUrl = serverUrlInput.value;
+        connectionStatus.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
+          <span>Connecting...</span>
+        `;
+        headerConnectionStatus.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
+          <span>Connecting...</span>
+        `;
+
+        try {
+          const response = await fetch(`${serverUrl}/api/tags`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+          }
+
+          isConnected = true;
+          updateConnectionStatus();
+
+          // Save the server URL to localStorage
+          saveSettings();
+
+          showToast('Successfully connected to Ollama server!', 'green');
+
+          return true;
+
+        } catch (error) {
+          isConnected = false;
+          updateConnectionStatus();
+
+          showToast('Failed to connect to Ollama server', 'red');
+          console.error('Connection test failed:', error);
+          return false;
+        }
+      }
+
+      function showToast(message, color = 'blue') {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 bg-${color}-500 text-white px-4 py-2 rounded-md shadow-lg transition-all transform translate-y-2 opacity-0`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+          toast.classList.remove('translate-y-2', 'opacity-0');
+          toast.classList.add('translate-y-0', 'opacity-100');
+        }, 10);
+
+        // Animate out after 3 seconds
+        setTimeout(() => {
+          toast.classList.remove('translate-y-0', 'opacity-100');
+          toast.classList.add('translate-y-2', 'opacity-0');
+
+          // Remove after animation
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
+        }, 3000);
+      }
+
+      function updateConnectionStatus() {
+        if (isConnected) {
+          connectionStatus.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+            <span>Connected</span>
+          `;
+          headerConnectionStatus.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+            <span>Connected</span>
+          `;
+        } else {
+          connectionStatus.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+            <span>Disconnected</span>
+          `;
+          headerConnectionStatus.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+            <span>Disconnected</span>
+          `;
+        }
+      }
+
+      function saveConversations() {
+        localStorage.setItem('ollama-conversations', JSON.stringify(conversations));
+      }
+
+      function saveSettings() {
+        const settings = {
+          model: selectedModel,
+          serverUrl: serverUrlInput.value,
+          models: availableModels,
+          lastConversationId: currentConversationId
+        };
+        console.log('Saving settings:', settings);
+        localStorage.setItem('ollama-settings', JSON.stringify(settings));
+      }
+    });
+
+    // Function to toggle thinking sections (globally accessible)
+    function toggleThinkingSection(id) {
+      console.log('Toggling thinking section:', id);
+      const section = document.getElementById(id);
+      if (!section) {
+        console.error('Section not found:', id);
+        return;
+      }
+
+      const content = section.querySelector('.thinking-content');
+      const expandIcon = section.querySelector('.expand-icon i');
+
+      if (!content) {
+        console.error('Content element not found in section:', id);
+        return;
+      }
+
+      // Check if content is currently hidden
+      const isHidden = content.classList.contains('hidden');
+      console.log('Is hidden:', isHidden);
+
+      if (isHidden) {
+        // Show content
+        content.classList.remove('hidden');
+        if (expandIcon) {
+          expandIcon.classList.remove('fa-chevron-down');
+          expandIcon.classList.add('fa-chevron-up');
+        }
+        console.log('Showing content');
+      } else {
+        // Hide content
+        content.classList.add('hidden');
+        if (expandIcon) {
+          expandIcon.classList.remove('fa-chevron-up');
+          expandIcon.classList.add('fa-chevron-down');
+        }
+        console.log('Hiding content');
+      }
+    }
+  </script>
+</body>
+
+</html>
