@@ -483,6 +483,28 @@
     <!-- Input area -->
     <div class="border-t border-gray-200 bg-white p-4">
       <div class="max-w-3xl mx-auto space-y-2">
+        <!-- Token metrics for mobile -->
+        <div id="mobile-token-metrics"
+          class="md:hidden flex justify-center mb-2 text-xs text-gray-500 space-x-2 p-2 border border-gray-200 rounded-md bg-gray-50 mx-auto max-w-fit">
+          <button id="mobile-refresh-tokens-btn"
+            class="text-gray-500 hover:text-blue-500 p-1 rounded-full hover:bg-gray-200 transition-colors"
+            title="Recalculate tokens">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <div class="flex items-center">
+            <span class="font-medium text-blue-500 mr-1">User:</span>
+            <span id="mobile-user-tokens">0</span>
+          </div>
+          <div class="flex items-center">
+            <span class="font-medium text-green-500 mr-1">Assistant:</span>
+            <span id="mobile-assistant-tokens">0</span>
+          </div>
+          <div class="flex items-center">
+            <span class="font-medium mr-1">Total:</span>
+            <span id="mobile-total-tokens">0</span>
+          </div>
+        </div>
+
         <!-- Model dropdown -->
         <div class="flex items-center justify-between max-w-3xl mx-auto space-x-4">
           <div class="relative w-48">
@@ -501,8 +523,27 @@
               </svg>
             </div>
           </div>
-          <div class="flex-1">
-            <!-- Other content -->
+          <div class="flex-1 flex justify-end">
+            <div id="token-metrics-display"
+              class="flex items-center text-sm text-gray-500 space-x-2 p-2 border border-gray-200 rounded-md bg-gray-50">
+              <button id="refresh-tokens-btn"
+                class="text-gray-500 hover:text-blue-500 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                title="Recalculate tokens">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+              <div class="flex items-center">
+                <span class="font-medium text-blue-500 mr-1">User:</span>
+                <span id="user-tokens">0</span>
+              </div>
+              <div class="flex items-center">
+                <span class="font-medium text-green-500 mr-1">Assistant:</span>
+                <span id="assistant-tokens">0</span>
+              </div>
+              <div class="flex items-center">
+                <span class="font-medium mr-1">Total:</span>
+                <span id="total-tokens">0</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -566,7 +607,12 @@
           id: 'default',
           title: 'Welcome conversation',
           lastUpdated: new Date().toISOString(),
-          messages: []
+          messages: [],
+          tokenMetrics: {
+            userTokens: 0,
+            assistantTokens: 0,
+            totalTokens: 0
+          }
         }
       };
       let isConnected = false;
@@ -583,6 +629,32 @@
         const savedConversations = localStorage.getItem('ollama-conversations');
         if (savedConversations) {
           conversations = JSON.parse(savedConversations);
+
+          // Ensure all conversations have token metrics
+          Object.keys(conversations).forEach(convId => {
+            if (!conversations[convId].tokenMetrics) {
+              conversations[convId].tokenMetrics = {
+                userTokens: 0,
+                assistantTokens: 0,
+                totalTokens: 0
+              };
+
+              // Calculate token metrics for existing messages
+              conversations[convId].messages.forEach(msg => {
+                const tokenCount = estimateTokenCount(msg.content);
+                if (msg.role === 'user') {
+                  conversations[convId].tokenMetrics.userTokens += tokenCount;
+                } else if (msg.role === 'assistant') {
+                  conversations[convId].tokenMetrics.assistantTokens += tokenCount;
+                }
+              });
+
+              // Update total tokens
+              conversations[convId].tokenMetrics.totalTokens =
+                conversations[convId].tokenMetrics.userTokens +
+                conversations[convId].tokenMetrics.assistantTokens;
+            }
+          });
           renderConversationList();
         }
 
@@ -680,6 +752,22 @@
 
         // New chat button
         newChatBtn.addEventListener('click', createNewConversation);
+
+        // Token metrics refresh buttons
+        const refreshTokensBtn = document.getElementById('refresh-tokens-btn');
+        const mobileRefreshTokensBtn = document.getElementById('mobile-refresh-tokens-btn');
+
+        if (refreshTokensBtn) {
+          refreshTokensBtn.addEventListener('click', function () {
+            recalculateTokens();
+          });
+        }
+
+        if (mobileRefreshTokensBtn) {
+          mobileRefreshTokensBtn.addEventListener('click', function () {
+            recalculateTokens();
+          });
+        }
 
         // Auto-resize textarea
         messageInput.addEventListener('input', function () {
@@ -1046,7 +1134,12 @@
           id: newId,
           title: 'New conversation',
           lastUpdated: new Date().toISOString(),
-          messages: []
+          messages: [],
+          tokenMetrics: {
+            userTokens: 0,
+            assistantTokens: 0,
+            totalTokens: 0
+          }
         };
 
         conversations[newId] = newConversation;
@@ -1196,6 +1289,9 @@
 
         // Scroll to bottom
         chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // Update token metrics display
+        updateTokenMetricsDisplay();
       }
 
       function addMessageToChat(role, content, saveToHistory = true) {
@@ -1329,6 +1425,9 @@
               ? content.substring(0, 30) + '...'
               : content;
           }
+
+          // Update token metrics
+          updateTokenMetrics(currentConversationId, role, content);
 
           conversations[currentConversationId].lastUpdated = new Date().toISOString();
           saveConversations();
@@ -1561,6 +1660,10 @@
               role: 'assistant',
               content: aiResponse
             });
+
+            // Update token metrics for the assistant response
+            updateTokenMetrics(currentConversationId, 'assistant', aiResponse);
+
             conversations[currentConversationId].lastUpdated = new Date().toISOString();
             saveConversations();
           }
@@ -1708,6 +1811,119 @@
         }
       }
 
+      function estimateTokenCount(text) {
+        if (!text) return 0;
+
+        // Remove thinking sections for more accurate token estimation
+        text = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+
+        // Different models tokenize differently, but a rough estimate is:
+        // 1 token ≈ 4 characters in English
+        // This is a simplified approach and won't be exact
+        return Math.ceil(text.length / 4);
+      }
+
+      function updateTokenMetrics(conversationId, role, content) {
+        if (!conversations[conversationId]) return;
+
+        const tokenCount = estimateTokenCount(content);
+        const metrics = conversations[conversationId].tokenMetrics;
+
+        if (role === 'user') {
+          metrics.userTokens += tokenCount;
+        } else if (role === 'assistant') {
+          metrics.assistantTokens += tokenCount;
+        }
+
+        metrics.totalTokens = metrics.userTokens + metrics.assistantTokens;
+
+        // Update the UI if we're displaying this conversation
+        if (conversationId === currentConversationId) {
+          updateTokenMetricsDisplay();
+        }
+      }
+
+      function updateTokenMetricsDisplay() {
+        const metrics = conversations[currentConversationId]?.tokenMetrics;
+        if (!metrics) return;
+
+        // Update the desktop token metrics in the UI
+        const userTokensElement = document.getElementById('user-tokens');
+        const assistantTokensElement = document.getElementById('assistant-tokens');
+        const totalTokensElement = document.getElementById('total-tokens');
+
+        // Update the mobile token metrics in the UI
+        const mobileUserTokensElement = document.getElementById('mobile-user-tokens');
+        const mobileAssistantTokensElement = document.getElementById('mobile-assistant-tokens');
+        const mobileTotalTokensElement = document.getElementById('mobile-total-tokens');
+
+        // Format the token counts
+        const userTokens = metrics.userTokens.toLocaleString();
+        const assistantTokens = metrics.assistantTokens.toLocaleString();
+        const totalTokens = metrics.totalTokens.toLocaleString();
+
+        // Update desktop elements
+        if (userTokensElement) {
+          userTokensElement.textContent = userTokens;
+        }
+
+        if (assistantTokensElement) {
+          assistantTokensElement.textContent = assistantTokens;
+        }
+
+        if (totalTokensElement) {
+          totalTokensElement.textContent = totalTokens;
+        }
+
+        // Update mobile elements
+        if (mobileUserTokensElement) {
+          mobileUserTokensElement.textContent = userTokens;
+        }
+
+        if (mobileAssistantTokensElement) {
+          mobileAssistantTokensElement.textContent = assistantTokens;
+        }
+
+        if (mobileTotalTokensElement) {
+          mobileTotalTokensElement.textContent = totalTokens;
+        }
+      }
+
+      function recalculateTokens() {
+        if (!conversations[currentConversationId]) return;
+
+        // Reset token metrics
+        conversations[currentConversationId].tokenMetrics = {
+          userTokens: 0,
+          assistantTokens: 0,
+          totalTokens: 0
+        };
+
+        // Recalculate tokens for each message
+        conversations[currentConversationId].messages.forEach(msg => {
+          const tokenCount = estimateTokenCount(msg.content);
+          if (msg.role === 'user') {
+            conversations[currentConversationId].tokenMetrics.userTokens += tokenCount;
+          } else if (msg.role === 'assistant') {
+            conversations[currentConversationId].tokenMetrics.assistantTokens += tokenCount;
+          }
+        });
+
+        // Update total tokens
+        conversations[currentConversationId].tokenMetrics.totalTokens =
+          conversations[currentConversationId].tokenMetrics.userTokens +
+          conversations[currentConversationId].tokenMetrics.assistantTokens;
+
+        // Update the display
+        updateTokenMetricsDisplay();
+
+        // Save the updated metrics
+        saveConversations();
+
+        // Show success message
+        showToast('Token metrics recalculated', 'green');
+      }
+
       function deleteMessage(messageDiv, messageId) {
         // Ask for confirmation
         if (!confirm('Are you sure you want to delete this message?')) {
@@ -1740,53 +1956,56 @@
                   renderConversationList();
                 }
               }
+
+              // Update token metrics
+              updateTokenMetricsDisplay();
             }
           }
 
           showToast('Message deleted', 'green');
         }, 300);
       }
+
+      // Function to toggle thinking sections (globally accessible)
+      function toggleThinkingSection(id) {
+        console.log('Toggling thinking section:', id);
+        const section = document.getElementById(id);
+        if (!section) {
+          console.error('Section not found:', id);
+          return;
+        }
+
+        const content = section.querySelector('.thinking-content');
+        const expandIcon = section.querySelector('.expand-icon i');
+
+        if (!content) {
+          console.error('Content element not found in section:', id);
+          return;
+        }
+
+        // Check if content is currently hidden
+        const isHidden = content.classList.contains('hidden');
+        console.log('Is hidden:', isHidden);
+
+        if (isHidden) {
+          // Show content
+          content.classList.remove('hidden');
+          if (expandIcon) {
+            expandIcon.classList.remove('fa-chevron-down');
+            expandIcon.classList.add('fa-chevron-up');
+          }
+          console.log('Showing content');
+        } else {
+          // Hide content
+          content.classList.add('hidden');
+          if (expandIcon) {
+            expandIcon.classList.remove('fa-chevron-up');
+            expandIcon.classList.add('fa-chevron-down');
+          }
+          console.log('Hiding content');
+        }
+      }
     });
-
-    // Function to toggle thinking sections (globally accessible)
-    function toggleThinkingSection(id) {
-      console.log('Toggling thinking section:', id);
-      const section = document.getElementById(id);
-      if (!section) {
-        console.error('Section not found:', id);
-        return;
-      }
-
-      const content = section.querySelector('.thinking-content');
-      const expandIcon = section.querySelector('.expand-icon i');
-
-      if (!content) {
-        console.error('Content element not found in section:', id);
-        return;
-      }
-
-      // Check if content is currently hidden
-      const isHidden = content.classList.contains('hidden');
-      console.log('Is hidden:', isHidden);
-
-      if (isHidden) {
-        // Show content
-        content.classList.remove('hidden');
-        if (expandIcon) {
-          expandIcon.classList.remove('fa-chevron-down');
-          expandIcon.classList.add('fa-chevron-up');
-        }
-        console.log('Showing content');
-      } else {
-        // Hide content
-        content.classList.add('hidden');
-        if (expandIcon) {
-          expandIcon.classList.remove('fa-chevron-up');
-          expandIcon.classList.add('fa-chevron-down');
-        }
-        console.log('Hiding content');
-      }
-    }
   </script>
 </body>
 
